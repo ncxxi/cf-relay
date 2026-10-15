@@ -92,6 +92,7 @@ After editing `wrangler.jsonc`, run `bunx wrangler types` to refresh `worker-con
 bun run dev        # wrangler dev
 bun run test       # vitest, inside the Workers runtime
 bun run typecheck  # tsc --noEmit
+bun run lint       # biome check
 bun run deploy     # wrangler deploy
 ```
 

@@ -1,5 +1,5 @@
-import type { Config } from "./config";
 import { contentTypeEssence, encodeBase64, isJsonType, isTextType, readAllLimited } from "./body";
+import type { Config } from "./config";
 import { RelayError } from "./errors";
 import { applyCors, forwardResponseHeaders, responseHeadersObject } from "./headers";
 import type { RelayResult } from "./relay";
@@ -103,7 +103,13 @@ export async function envelopeResponse(
   return new Response(JSON.stringify(envelope), { status, headers });
 }
 
-export function errorResponse(error: unknown, request: Request, config: Config, meta: RequestMeta, totalMs: number): Response {
+export function errorResponse(
+  error: unknown,
+  request: Request,
+  config: Config,
+  meta: RequestMeta,
+  totalMs: number,
+): Response {
   const relayError =
     error instanceof RelayError
       ? error

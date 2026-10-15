@@ -57,7 +57,15 @@ async function attemptRelay(relay: RelayRequest): Promise<Omit<RelayResult, "ups
 
 async function relayChain(relay: RelayRequest, signal: AbortSignal): Promise<Omit<RelayResult, "upstreamMs">> {
   if (!relay.options.followRedirects) {
-    const response = await single(relay, relay.target, relay.method, relay.body ?? relay.stream, "manual", signal, relay.headers);
+    const response = await single(
+      relay,
+      relay.target,
+      relay.method,
+      relay.body ?? relay.stream,
+      "manual",
+      signal,
+      relay.headers,
+    );
     return { response, finalUrl: relay.target.href };
   }
 
@@ -93,7 +101,10 @@ async function followRedirects(relay: RelayRequest, signal: AbortSignal): Promis
       headers.delete("cookie");
       headers.delete("proxy-authorization");
     }
-    if (response.status === 303 || ((response.status === 301 || response.status === 302) && method !== "GET" && method !== "HEAD")) {
+    if (
+      response.status === 303 ||
+      ((response.status === 301 || response.status === 302) && method !== "GET" && method !== "HEAD")
+    ) {
       method = "GET";
       body = null;
     }

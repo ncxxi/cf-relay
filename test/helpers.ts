@@ -43,7 +43,8 @@ export function mockUpstream(handler: (call: UpstreamCall) => Response | Promise
       cf: init.cf,
       signal: init.signal ?? null,
       bodyText: async () => (rawBody === null ? "" : new Response(rawBody).text()),
-      bodyBytes: async () => (rawBody === null ? new Uint8Array(0) : new Uint8Array(await new Response(rawBody).arrayBuffer())),
+      bodyBytes: async () =>
+        rawBody === null ? new Uint8Array(0) : new Uint8Array(await new Response(rawBody).arrayBuffer()),
     };
     calls.push(call);
     return handler(call);

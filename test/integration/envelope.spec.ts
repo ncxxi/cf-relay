@@ -173,9 +173,7 @@ describe("envelope mode", () => {
   });
 
   it("treats stream: true as a shorthand for responseType stream", async () => {
-    mockUpstream(
-      () => new Response("data: 1\n\n", { headers: { "content-type": "text/event-stream" } }),
-    );
+    mockUpstream(() => new Response("data: 1\n\n", { headers: { "content-type": "text/event-stream" } }));
 
     const response = await relay(jsonRequest("https://relay.test/", { url: target, stream: true }));
     expect(response.status).toBe(200);

@@ -10,7 +10,10 @@ export function guardTarget(target: URL, policy: TargetPolicy): void {
     throw new RelayError("BAD_TARGET", `unsupported scheme "${target.protocol}"`);
   }
 
-  const host = target.hostname.toLowerCase().replace(/^\[|\]$/g, "").replace(/\.$/, "");
+  const host = target.hostname
+    .toLowerCase()
+    .replace(/^\[|\]$/g, "")
+    .replace(/\.$/, "");
   if (matchesAny(host, policy.denyHosts)) {
     throw new RelayError("BLOCKED_TARGET", `host "${host}" is denied`);
   }
@@ -30,12 +33,7 @@ function isPrivateHost(host: string): boolean {
   if (host.includes(":")) return isPrivateIPv6(host);
   const ipv4 = parseIPv4(host);
   if (ipv4) return isPrivateIPv4(ipv4);
-  return (
-    host === "localhost" ||
-    host.endsWith(".localhost") ||
-    host.endsWith(".local") ||
-    host.endsWith(".internal")
-  );
+  return host === "localhost" || host.endsWith(".localhost") || host.endsWith(".local") || host.endsWith(".internal");
 }
 
 type IPv4 = [number, number, number, number];
