@@ -29,6 +29,7 @@ Request body, JSON object:
   "headers": { "authorization": "Bearer …" },// optional; object, arrays allowed
   "body": "{\"name\":\"Ada\"}",              // optional; string, or object
   "encoding": "utf8",                        // optional; "base64" decodes
+  "stream": false,                           // optional; true = responseType "stream"
   "options": { "timeoutMs": 15000, "meta": true }
 }
 ```
@@ -65,7 +66,7 @@ Body conversion (`responseType`, default `auto`):
 | `text/*`, `application/xml`, `application/javascript`, `application/x-www-form-urlencoded`, `*+xml`, missing content type | UTF-8 string. |
 | Anything else | Base64 string, `encoding: "base64"`. |
 
-Explicit `responseType`: `json` parses, `text` decodes, `base64` encodes, `stream` bypasses the envelope entirely and returns the upstream response raw with `x-relay-*` metadata headers.
+Explicit `responseType`: `json` parses, `text` decodes, `base64` encodes, `stream` bypasses the envelope entirely and returns the upstream response raw with `x-relay-*` metadata headers. The top-level `stream: true` is a shorthand for `responseType: "stream"`; an explicit `options.responseType` or `?type=` wins over it.
 
 ## Transparent mode
 
@@ -100,6 +101,49 @@ GET  /?url=https://api.example.com/hook&method=POST&body=hello
 Without `?body`, the inbound body is streamed to the target and the inbound `content-type` is forwarded. Other query parameters are not forwarded; the target URL comes entirely from `url`.
 
 `type` only affects envelope responses, so it has no visible effect in compat or transparent mode.
+
+## Streaming LLM calls
+
+SSE responses — OpenAI chat completions, the Responses API, anything sending `text/event-stream` — pass through untouched in transparent mode, in raw-body compat mode, and in envelope mode with `stream: true`. The JSON envelope format itself cannot carry incremental frames: with `responseType` left at `auto`, an SSE response is buffered whole, capped at `MAX_BODY_BYTES`, and handed back as one string in the envelope's `body` after the upstream closes.
+
+Transparent mode is the natural fit. The prompt travels in the request body, and both directions stream without buffering:
+
+```sh
+curl -N -X POST 'https://relay.example.workers.dev/t/api.openai.com/v1/chat/completions' \
+  -H 'authorization: Bearer sk-…' \
+  -H 'content-type: application/json' \
+  -d '{"model":"gpt-4o","stream":true,"messages":[{"role":"user","content":"…"}]}'
+```
+
+The Responses API is the same shape, only the path changes:
+
+```sh
+curl -N -X POST 'https://relay.example.workers.dev/t/api.openai.com/v1/responses' \
+  -H 'authorization: Bearer sk-…' \
+  -H 'content-type: application/json' \
+  -d '{"model":"gpt-4o","stream":true,"input":"…"}'
+```
+
+The envelope can stream as well, using the envelope as a config wrapper. `stream: true` (or `options.responseType: "stream"`) makes the relay answer with the upstream response raw — status line, headers and SSE frames — instead of a JSON envelope:
+
+```jsonc
+{
+  "url": "https://api.openai.com/v1/chat/completions",
+  "method": "POST",
+  "headers": { "authorization": "Bearer sk-…" },
+  "body": { "model": "gpt-4o", "stream": true, "messages": [{ "role": "user", "content": "…" }] },
+  "stream": true
+}
+```
+
+Relay-level failures (blocked target, timeout, malformed request) still arrive as the JSON error envelope, so a streaming client can tell "relay failed" from "upstream answered".
+
+Caveats:
+
+- **The timeout guards time-to-headers only.** An attempt is aborted if the upstream has not started responding within `timeoutMs`; once headers are in, a long SSE stream is not cut off. Raise `timeout` for slow non-streaming completions.
+- **Never put a prompt in the URL.** The platform caps URLs at 16 KB, and compat GET (`?url=…&body=…`) spends that budget on the payload. Transparent mode keeps the short target in the URL and the body elsewhere.
+- **Raw-body `POST /?url=…` treats JSON bodies as envelopes.** The router sends any `POST /` with a JSON content type to envelope mode, `?url` or not. For a JSON LLM payload use `/t/` or the envelope.
+- **Platform ceilings (Free plan):** request body 100 MB, response body no limit, no duration limit while the client stays connected. `MAX_BODY_BYTES` only constrains buffered envelope traffic.
 
 ## Options
 

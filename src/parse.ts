@@ -58,6 +58,7 @@ export async function buildEnvelopeRequest(request: Request, url: URL, config: C
   const options = baseOptions(config, "envelope");
   applyQueryOptions(options, url);
   applyEnvelopeOptions(options, data.options);
+  if (data.stream === true && options.responseType === "auto") options.responseType = "stream";
 
   const body = buildEnvelopeBody(data.body, data.encoding, url);
   const methodValue = pickString(data.method) ?? url.searchParams.get("method");

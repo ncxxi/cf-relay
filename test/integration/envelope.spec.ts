@@ -172,6 +172,23 @@ describe("envelope mode", () => {
     expect(await response.text()).toBe("streamed");
   });
 
+  it("treats stream: true as a shorthand for responseType stream", async () => {
+    mockUpstream(
+      () => new Response("data: 1\n\n", { headers: { "content-type": "text/event-stream" } }),
+    );
+
+    const response = await relay(jsonRequest("https://relay.test/", { url: target, stream: true }));
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toBe("text/event-stream");
+    expect(response.headers.get("x-relay-status")).toBe("200");
+    expect(await response.text()).toBe("data: 1\n\n");
+
+    const explicit = await relay(
+      jsonRequest("https://relay.test/", { url: target, stream: true, options: { responseType: "text" } }),
+    );
+    expect((await envelopeBody(explicit)).body).toBe("data: 1\n\n");
+  });
+
   it("adds CORS and relay headers to responses", async () => {
     mockUpstream(() => new Response("ok"));
 
