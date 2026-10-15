@@ -1,5 +1,7 @@
 # cf-relay
 
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/ncxxi/cf-relay)
+
 A Cloudflare Workers HTTP relay. Forward requests to any `http(s)` origin from three interfaces:
 
 - **Envelope** — the primary interface. `POST /` with a JSON body describing the request, and get a JSON envelope back. Full option surface: method, headers, bodies (raw or base64), redirects, retries, timeouts, cache, metadata.
@@ -15,6 +17,8 @@ bun install
 bunx wrangler dev          # local runtime on http://localhost:8787
 bunx wrangler deploy       # deploy to your account
 ```
+
+Or press the Deploy to Cloudflare button above: it copies this repository into your GitHub account, creates the Worker, and wires up Workers Builds so every push to `main` redeploys. The relay key stays optional.
 
 Enable the optional relay key before sharing the URL:
 
