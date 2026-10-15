@@ -1,0 +1,22 @@
+{
+  "name": "cf-relay",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "types": "wrangler types",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "^1.4.3",
+    "vitest": "^4.1.0",
+    "wrangler": "^4.151.0"
+  },
+  "peerDependencies": {
+    "typescript": "^7"
+  }
+}

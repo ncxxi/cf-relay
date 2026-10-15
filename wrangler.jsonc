@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cf-relay",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "CORS_ORIGINS": "*",
+    "MAX_BODY_BYTES": "16777216",
+    "TIMEOUT_MS": "30000",
+    "USER_AGENT": "",
+    "RATE_LIMIT": "",
+    "ALLOW_PRIVATE_TARGETS": "false",
+    "DENY_HOSTS": ""
+  }
+}
